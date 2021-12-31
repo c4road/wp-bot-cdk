@@ -1,2 +1,6 @@
 -r infrastructure/requirements.txt
 -r runtime/requirements.txt
+
+chalice==1.26.2
+boto3==1.20.10
+chalice-cdk==0.1.0

@@ -1,7 +1,10 @@
 .chalice/deployments/
 .chalice/venv/
 
-/__pycache__
+runtime/chalicelib/__pycache__/
+
+chalice.out
+cdk.out
 
 # Byte-compiled / optimized / DLL files
 */__pycache__/
