@@ -1,4 +1,7 @@
+import boto3
+import json
 import logging
+import os
 import random
 
 from binance.client import Client
@@ -12,6 +15,8 @@ from chalicelib.twilio import get_twilio_message
 app = Chalice(app_name='wp-bot-platform')
 logging.basicConfig(level = logging.INFO)
 app.log.setLevel(logging.DEBUG)
+
+sns = boto3.client('sns')
 
 @app.route('/ping')
 def index():
@@ -38,21 +43,36 @@ def CoinUSDTHandler(coin=None):
 
 @app.route('/whatsapp/ack', methods=['POST'], content_types=['application/x-www-form-urlencoded'])
 def WhatsappAckHandler():
+    message = get_twilio_message(app.current_request.raw_body)
+    
+    app.log.info('Processing incoming message from twilio %s', message)
+    try:
+        sns.publish(Message=json.dumps(message), 
+                    Subject='TestSubject1',
+                    TopicArn=os.environ['TOPIC_ARN'])
+    except Exception as e:
+        app.log.error(f'Something wrong happened - {str(e)}')
+        return Response(
+            body={"error": str(e)},
+            status_code=500,
+            headers={'Content-Type': 'application/json'}
+        )
+    else:
+        return Response(
+            body={},
+            status_code=200,
+            headers={'Content-Type': 'application/json'}
+        )
+
+
+@app.route('/whatsapp/ack_old', methods=['POST'], content_types=['application/x-www-form-urlencoded'])
+def WhatsappAckHandlerOld():
     account_sid, auth_token = get_twilio_secret()
     message = get_twilio_message(app.current_request.raw_body)
     
     app.log.info('Processing incoming message from twilio %s', message)
     response_bodies = [
-        "todo bien por aqui",
-        "que paso pana mio",
-        "que tal va tu dia",
-        "Hola soy un bot", 
-        "Que quieres hacer hoy?",
-        "La puta que te pario",
-        "Como te llamas",
-        "La concha de la lora",
-        "Disculpa no quise insultarte",
-        "Espero que estes bien"
+        "test response",
     ]
     try:
         twilio = TwilioClient(account_sid, auth_token) 
@@ -86,8 +106,3 @@ def WhatsappAckHandler():
         return Response(body={},
                         status_code=204,
                         headers={'Content-Type': 'application/json'})
-
-@app.on_sns_message(topic='my-demo-topic')
-def handle_sns_message(event):
-    app.log.debug("Received message with subject: %s, message: %s",
-                  event.subject, event.message)
