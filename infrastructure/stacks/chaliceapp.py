@@ -35,6 +35,7 @@ class WhatsappBotStack(cdk.Stack):
                                    })
         self.sns_lambda = _lambda.DockerImageFunction(self, "WhatsappCommandHandler",
                           code=_lambda.DockerImageCode.from_image_asset(SNS_HANDLER_RUNTIME),
-                          role=self.role)
+                          role=self.role,
+                          memory_size=512)
 
         self.topic.add_subscription(sns_subscriptions.LambdaSubscription(self.sns_lambda))
