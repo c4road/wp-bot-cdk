@@ -24,21 +24,23 @@ def handler(event, context):
     account_sid, auth_token = get_twilio_secret()
     for message in get_sns_message(event):
         logger.info('Processing incoming message from twilio %s', message)
-        
+
         command_in = message.get("Body")
+        logger.info('Receiving command body=%s', command_in)
+
         try:
-            command_out = process_command(command_in)
+            response = process_command(command_in)
+            logger.info('Processing command output %s', response)
         except Exception as e:
             logger.error('Error processing command %s', e)
-        
-        logger.info('Processing command output %s', command_out)
+            return 
+
         try:
-            twilio = TwilioClient(account_sid, auth_token) 
-            message = twilio.messages.create( 
+            twilio = TwilioClient(account_sid, auth_token)
+            message = twilio.messages.create(
                 from_=message.get('Receiver'),
-                body=command_out,      
-                to=message.get('Sender').get('Number')
-            ) 
+                body=response,
+                to=message.get('Sender').get('Number'))
         except TwilioException as e:
             error = {
                 'name': str(e),
@@ -50,5 +52,8 @@ def handler(event, context):
                 'details': e.details,
             }
             logger.error('Twilio error: %s', error)
+        except Exception as e:
+            logger.error("Something wrong happened %s", e)
+            return
         else:
             logger.info("Message processed successfully")

@@ -106,7 +106,7 @@ def get_portfolio_data(tickers,
     
     """
     client = _get_client()
-    tickers = get_usdt_tickers(client, tickers)
+    tickers = get_usdt_tickers(tickers)
     
     if not isinstance(tickers, list):
         raise Exception(f"Invalid ticker format, should be list got {type(tickers)}")
@@ -158,7 +158,7 @@ def get_historical(coin,
     Default interval: "1DAY"
     """
     client = _get_client()
-    ticker = get_usdt_tickers(client, [coin])
+    ticker = get_usdt_tickers([coin])
     if not ticker:
         raise Exception("Ticker not found: {}".format(coin))
     if len(ticker) > 1:
@@ -220,11 +220,17 @@ def get_price_variation(interval, coins):
         raise Exception("[get_price_variation] Invalid interval {}".format(interval))
     
     data = handler[interval](coins)
-    data = ((data.diff(len(data)-1).dropna() / data.iloc[-1:]) * 100).round(3)
+    data = ((data.diff(len(data)-1).dropna() / data.iloc[-1:]) * 100).round(1)
 
-    variations = {coin:variation[0] for coin, variation in data.iteritems()}
+    variations = {coin:_get_symbol(variation[0]) for coin, variation in data.iteritems()}
 
     return _prepare_variation_message(variations)
+
+def _get_symbol(variation):
+
+    if variation <= 0:
+        return '🔴' + ' ' + str(variation) + '%'
+    return '🟢' + ' ' + str(variation) + '%'
 
 
 def _prepare_variation_message(variations):

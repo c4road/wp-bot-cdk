@@ -1,3 +1,5 @@
+import logging 
+
 from services.binance import get_price_variation
 
 def process_command(message):
@@ -6,6 +8,7 @@ def process_command(message):
     """
     try:
         command, interval, coins = message.split()
+        coins = coins.split(',')
     except ValueError:
         raise Exception("Invalid command: Command has not three parts")
 

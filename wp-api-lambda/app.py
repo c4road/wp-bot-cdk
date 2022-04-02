@@ -6,7 +6,7 @@ import os
 from chalice import Chalice, Response
 
 from chalicelib.twilio import get_twilio_message
-from chalicelib.utils import validate_command
+from chalicelib.utils import is_valid_command
 
 
 app = Chalice(app_name='wp-bot-platform')
@@ -25,8 +25,8 @@ def index():
 def WhatsappAckHandler():
     message = get_twilio_message(app.current_request.raw_body)
     
-    if not validate_command(message.get('Body')):
-        app.log.info('Message %s is not a command %s', (message.get('MessageSid'), message.get('Body')))
+    if not is_valid_command(message.get('Body')):
+        app.log.info('Message %s is not a command body=%s', message.get('MessageSid'), message.get('Body'))
         return
 
     app.log.info('Processing incoming message from twilio %s', message)
